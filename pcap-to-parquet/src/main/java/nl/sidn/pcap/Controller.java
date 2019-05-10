@@ -19,15 +19,6 @@
  */
 package nl.sidn.pcap;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import nl.sidn.pcap.decoder.ICMPDecoder;
 import nl.sidn.pcap.load.LoaderThread;
 import nl.sidn.pcap.packet.Packet;
@@ -38,6 +29,12 @@ import nl.sidn.pcap.support.PacketCombination;
 import nl.sidn.pcap.support.RequestKey;
 import nl.sidn.pcap.util.Settings;
 import nl.sidn.stats.MetricManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.*;
 
 public class Controller {
   private static final Logger LOGGER = LoggerFactory.getLogger(Controller.class);
@@ -124,14 +121,14 @@ public class Controller {
   /**
    * Lookup protocol, if no request is found then get the proto from the response.
    * 
-   * @param p
+   * @param packetCombination
    * @return
    */
-  private int lookupProtocol(PacketCombination p) {
-    if (p.getRequest() != null) {
-      return p.getRequest().getProtocol();
-    } else if (p.getResponse() != null) {
-      return p.getResponse().getProtocol();
+  private int lookupProtocol(PacketCombination packetCombination) {
+    if (packetCombination.getRequest() != null) {
+      return packetCombination.getRequest().getProtocol();
+    } else if (packetCombination.getResponse() != null) {
+      return packetCombination.getResponse().getProtocol();
     }
 
     // unknown proto
