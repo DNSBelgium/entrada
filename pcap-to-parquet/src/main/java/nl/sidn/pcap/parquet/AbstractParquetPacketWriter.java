@@ -21,7 +21,6 @@ package nl.sidn.pcap.parquet;
 
 import nl.sidn.pcap.support.PacketCombination;
 import nl.sidn.pcap.util.GeoLookupUtil;
-import nl.sidn.pcap.util.Settings;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.apache.commons.io.FileUtils;
@@ -47,9 +46,7 @@ public abstract class AbstractParquetPacketWriter {
   // writer vars
   protected DatasetDescriptor descriptor;
   protected DatasetWriter<GenericRecord> writer;
-  protected String repoLocation;
   protected String schema;
-  protected String repoName;
   // meta info
   protected GeoLookupUtil geoLookup;
   protected Map<String, String> geo_ip_cache = new HashMap<>();
@@ -57,11 +54,10 @@ public abstract class AbstractParquetPacketWriter {
   // metrics
   protected Set<String> countries = new HashSet<>();
 
-  public AbstractParquetPacketWriter(String repoName, String schema, GeoLookupUtil geoLookup) {
+  public AbstractParquetPacketWriter(String schema, GeoLookupUtil geoLookup) {
     this.geoLookup = geoLookup;
-    this.repoLocation = Settings.getInstance().getSetting(Settings.OUTPUT_LOCATION);
     this.schema = schema;
-    this.repoName = repoName;
+    LOGGER.info("constructed with schema: {}", schema);
   }
 
 
@@ -116,17 +112,10 @@ public abstract class AbstractParquetPacketWriter {
    */
   protected abstract PartitionStrategy createPartitionStrategy();
 
-  public void open() {
-    String server = Settings.getInstance().getServer().getFullname();
-    // replace any non alphanumeric chars in the servername with underscore
-    // kitesdk does not support this non alphas
-    // https://issues.cloudera.org/browse/KITE-673
-    String normalizedServer = server.replaceAll("[^A-Za-z0-9 ]", "_");
-    String path = repoLocation + System.getProperty("file.separator") + normalizedServer
-        + System.getProperty("file.separator") + repoName;
+  public void open(String path) {
 
 
-    LOGGER.info("Create new Parquet writer with path: " + path);
+    LOGGER.info("Create new Parquet writer with path {}", path);
 
     /* before opening, make sure there is no (old) .metadata folder in the output dir */
     String metadataLocation = path + System.getProperty("file.separator") + ".metadata";
@@ -145,14 +134,13 @@ public abstract class AbstractParquetPacketWriter {
     try {
       descriptor = new DatasetDescriptor.Builder().schemaUri("resource:" + schema)
           .format(Formats.PARQUET).partitionStrategy(partitionStrategy).build();
-
     } catch (Exception e) {
       throw new RuntimeException("Error while creating data descriptor", e);
     }
-    // create a file dataset for the above descriptor
-    Dataset<GenericRecord> dataset =
-        Datasets.create("dataset:file:" + path, descriptor, GenericRecord.class);
 
+    String uri = "dataset:file:" + path;
+    LOGGER.info("Creating a dataset with URI = {}", uri);
+    Dataset<GenericRecord> dataset = Datasets.create(uri, descriptor, GenericRecord.class);
     writer = dataset.newWriter();
 
     LOGGER.info("Created new Parquet writer");
@@ -186,7 +174,6 @@ public abstract class AbstractParquetPacketWriter {
     LOGGER.info("geo_ip_cache: {}", geo_ip_cache.size());
     LOGGER.info("asn_cache: {}", asn_cache.size());
   }
-
 
   /**
    * replace all non printable ascii chars with the hex value of the char.

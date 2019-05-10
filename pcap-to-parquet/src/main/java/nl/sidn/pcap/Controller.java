@@ -75,10 +75,21 @@ public class Controller {
       parquetMaxPackets = Integer.parseInt(setting.getSetting(Settings.OUTPUT_MAX_PACKETS));
     }
 
-    dnsWriter = new DNSParquetPacketWriter("dnsdata", "dns-query.avsc", GeoLookupUtil.getInstance());
-    dnsWriter.open();
-    icmpWriter = new ICMPParquetPacketWriter("icmpdata", "icmp-packet.avsc", GeoLookupUtil.getInstance());
-    icmpWriter.open();
+    dnsWriter = new DNSParquetPacketWriter("dns-query.avsc", GeoLookupUtil.getInstance());
+    dnsWriter.open(repoPath("dnsdata"));
+    icmpWriter = new ICMPParquetPacketWriter("icmp-packet.avsc", GeoLookupUtil.getInstance());
+    icmpWriter.open(repoPath("icmpdata"));
+  }
+
+  private String repoPath(String repoName) {
+    String server = Settings.getInstance().getServer().getFullname();
+    // replace any non alphanumeric chars in the servername with underscore
+    // kitesdk does not support this non alphas
+    // https://issues.cloudera.org/browse/KITE-673
+    String normalizedServer = server.replaceAll("[^A-Za-z0-9 ]", "_");
+    String path = Settings.getInstance().getSetting(Settings.OUTPUT_LOCATION) + System.getProperty("file.separator") + normalizedServer
+        + System.getProperty("file.separator") + repoName;
+    return path;
   }
 
   public void startLoaderThread(String inputDir, String stateDir, String outputDir) {
@@ -154,7 +165,7 @@ public class Controller {
     if (counter >= parquetMaxPackets) {
       dnsWriter.close();
       // create new writer
-      dnsWriter.open();
+      dnsWriter.open(repoPath("dnsdata"));
       // reset counter
       counter = 0;
     }
@@ -167,7 +178,7 @@ public class Controller {
     if (icmpCounter >= parquetMaxPackets) {
       icmpWriter.close();
       // create new writer
-      icmpWriter.open();
+      icmpWriter.open(repoPath("icmpdata"));
       // reset counter
       icmpCounter = 0;
     }

@@ -51,8 +51,8 @@ public class ICMPParquetPacketWriter extends AbstractParquetPacketWriter {
   private Map<Integer, Integer> types_v4 = new HashMap<>();
   private Map<Integer, Integer> types_v6 = new HashMap<>();
 
-  public ICMPParquetPacketWriter(String repoName, String schema, GeoLookupUtil geoLookup) {
-    super(repoName, schema, geoLookup);
+  public ICMPParquetPacketWriter(String schema, GeoLookupUtil geoLookup) {
+    super(schema, geoLookup);
   }
 
   @Override

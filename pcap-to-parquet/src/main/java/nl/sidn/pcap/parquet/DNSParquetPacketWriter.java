@@ -74,8 +74,8 @@ public class DNSParquetPacketWriter extends AbstractParquetPacketWriter {
   private GoogleResolverCheck googleCheck = new GoogleResolverCheck();
   private OpenDNSResolverCheck openDNSCheck = new OpenDNSResolverCheck();
 
-  public DNSParquetPacketWriter(String repoName, String schema, GeoLookupUtil geoLookup) {
-    super(repoName, schema, geoLookup);
+  public DNSParquetPacketWriter(String schema, GeoLookupUtil geoLookup) {
+    super(schema, geoLookup);
     metricManager = MetricManager.getInstance();
   }
 
