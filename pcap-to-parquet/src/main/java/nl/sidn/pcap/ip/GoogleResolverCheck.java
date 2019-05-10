@@ -19,19 +19,14 @@
  */
 package nl.sidn.pcap.ip;
 
-import java.net.UnknownHostException;
-import java.util.List;
+import nl.sidn.pcap.util.Settings;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xbill.DNS.Cache;
-import org.xbill.DNS.Lookup;
-import org.xbill.DNS.Record;
-import org.xbill.DNS.Resolver;
-import org.xbill.DNS.SimpleResolver;
-import org.xbill.DNS.TXTRecord;
-import org.xbill.DNS.Type;
-import nl.sidn.pcap.util.Settings;
+import org.xbill.DNS.*;
+
+import java.net.UnknownHostException;
+import java.util.List;
 
 /**
  * check if an IP address is a Google open resolver. This check uses the list from the Google
@@ -42,6 +37,7 @@ import nl.sidn.pcap.util.Settings;
  */
 public final class GoogleResolverCheck extends AbstractNetworkCheck {
 
+  public static final int TIMEOUT = 15;
   private static String GOOGLE_RESOLVER_IP_FILENAME = "google-resolvers";
   protected static final Logger LOGGER = LoggerFactory.getLogger(GoogleResolverCheck.class);
 
@@ -51,13 +47,12 @@ public final class GoogleResolverCheck extends AbstractNetworkCheck {
     try {
       Resolver resolver = new SimpleResolver();
       // dns resolvers may take a long time to return a response.
-      resolver.setTimeout(15);
-      Lookup l =
-          new Lookup(StringUtils.endsWith(hostname, ".") ? hostname : hostname + ".", Type.TXT);
+      resolver.setTimeout(TIMEOUT);
+      Lookup lookup = new Lookup(StringUtils.endsWith(hostname, ".") ? hostname : hostname + ".", Type.TXT);
       // always make sure the cache is empty
-      l.setCache(new Cache());
-      l.setResolver(resolver);
-      Record[] records = l.run();
+      lookup.setCache(new Cache());
+      lookup.setResolver(resolver);
+      Record[] records = lookup.run();
       if (records != null && records.length > 0) {
         parse(records[0]);
       }
@@ -72,6 +67,7 @@ public final class GoogleResolverCheck extends AbstractNetworkCheck {
 
   private void parse(Record record) {
     TXTRecord txt = (TXTRecord) record;
+    @SuppressWarnings("unchecked")
     List<String> lines = txt.getStrings();
     for (String line : lines) {
       String[] parts = StringUtils.split(line, " ");

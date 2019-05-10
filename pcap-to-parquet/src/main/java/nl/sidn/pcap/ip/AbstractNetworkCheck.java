@@ -21,36 +21,25 @@
  */	
 package nl.sidn.pcap.ip;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.google.common.net.InetAddresses;
+import nl.sidn.pcap.util.Settings;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.net.InetAddresses;
-
-import nl.sidn.pcap.util.Settings;
+import java.io.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.*;
 
 public abstract class AbstractNetworkCheck{
 	
 	protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractNetworkCheck.class);
 	
-	protected List<Subnet> bit_subnets = new ArrayList<Subnet>();
-	protected List<String> subnets = new ArrayList<String>();
+	protected List<Subnet> bit_subnets = new ArrayList<>();
+	protected List<String> subnets = new ArrayList<>();
 	
-	private Map<String, Boolean> matchCache = new HashMap<String, Boolean>();
+	private Map<String, Boolean> matchCache = new HashMap<>();
 	
 	public AbstractNetworkCheck(){
 		String filename = Settings.getInstance().getSetting(Settings.STATE_LOCATION) + System.getProperty("file.separator") + getFilename();
