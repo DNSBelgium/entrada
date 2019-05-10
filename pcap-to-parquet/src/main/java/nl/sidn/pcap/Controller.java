@@ -27,6 +27,7 @@ import nl.sidn.pcap.parquet.ICMPParquetPacketWriter;
 import nl.sidn.pcap.support.NamedThreadFactory;
 import nl.sidn.pcap.support.PacketCombination;
 import nl.sidn.pcap.support.RequestKey;
+import nl.sidn.pcap.util.GeoLookupUtil;
 import nl.sidn.pcap.util.Settings;
 import nl.sidn.stats.MetricManager;
 import org.slf4j.Logger;
@@ -74,9 +75,9 @@ public class Controller {
       parquetMaxPackets = Integer.parseInt(setting.getSetting(Settings.OUTPUT_MAX_PACKETS));
     }
 
-    dnsWriter = new DNSParquetPacketWriter("dnsdata", "dns-query.avsc");
+    dnsWriter = new DNSParquetPacketWriter("dnsdata", "dns-query.avsc", GeoLookupUtil.getInstance());
     dnsWriter.open();
-    icmpWriter = new ICMPParquetPacketWriter("icmpdata", "icmp-packet.avsc");
+    icmpWriter = new ICMPParquetPacketWriter("icmpdata", "icmp-packet.avsc", GeoLookupUtil.getInstance());
     icmpWriter.open();
   }
 

@@ -19,26 +19,22 @@
  */
 package nl.sidn.pcap.parquet;
 
+import nl.sidn.pcap.support.PacketCombination;
+import nl.sidn.pcap.util.GeoLookupUtil;
+import nl.sidn.pcap.util.Settings;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericRecordBuilder;
+import org.apache.commons.io.FileUtils;
+import org.kitesdk.data.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.generic.GenericRecordBuilder;
-import org.apache.commons.io.FileUtils;
-import org.kitesdk.data.Dataset;
-import org.kitesdk.data.DatasetDescriptor;
-import org.kitesdk.data.DatasetWriter;
-import org.kitesdk.data.Datasets;
-import org.kitesdk.data.Formats;
-import org.kitesdk.data.PartitionStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import nl.sidn.pcap.support.PacketCombination;
-import nl.sidn.pcap.util.GeoLookupUtil;
-import nl.sidn.pcap.util.Settings;
 
 public abstract class AbstractParquetPacketWriter {
 
@@ -56,13 +52,13 @@ public abstract class AbstractParquetPacketWriter {
   protected String repoName;
   // meta info
   protected GeoLookupUtil geoLookup;
-  protected Map<String, String> geo_ip_cache = new HashMap<String, String>();
-  protected Map<String, String> asn_cache = new HashMap<String, String>();
+  protected Map<String, String> geo_ip_cache = new HashMap<>();
+  protected Map<String, String> asn_cache = new HashMap<>();
   // metrics
   protected Set<String> countries = new HashSet<>();
 
-  public AbstractParquetPacketWriter(String repoName, String schema) {
-    geoLookup = new GeoLookupUtil();
+  public AbstractParquetPacketWriter(String repoName, String schema, GeoLookupUtil geoLookup) {
+    this.geoLookup = geoLookup;
     this.repoLocation = Settings.getInstance().getSetting(Settings.OUTPUT_LOCATION);
     this.schema = schema;
     this.repoName = repoName;
@@ -71,9 +67,9 @@ public abstract class AbstractParquetPacketWriter {
 
   /**
    * use caching for maxmind otherwise cpu usage will be high and app will stall
-   * 
-   * @param lookup
-   * @return
+   *
+   * @param lookup ip address to look up
+   * @return determined country
    */
   protected String getCountry(String lookup) {
     String country = geo_ip_cache.get(lookup);
@@ -90,9 +86,9 @@ public abstract class AbstractParquetPacketWriter {
 
   /**
    * use caching for maxmind otherwise cpu usage will be high and app will stall
-   * 
-   * @param lookup
-   * @return
+   *
+   * @param lookup IP address
+   * @return found ASN
    */
   protected String getAsn(String lookup) {
     String asn = asn_cache.get(lookup);
@@ -108,15 +104,15 @@ public abstract class AbstractParquetPacketWriter {
 
   /**
    * create a parquet record which combines values from the query and the response
-   * 
-   * @param packet
+   *
+   * @param packet a combo of query and response packets
    */
   public abstract void write(PacketCombination packet);
 
   /**
    * Create the partion strategy for the data, e.g. year, month,day
-   * 
-   * @return
+   *
+   * @return the partion strategy to use
    */
   protected abstract PartitionStrategy createPartitionStrategy();
 
@@ -145,7 +141,7 @@ public abstract class AbstractParquetPacketWriter {
      * structure with the distinct partition values.
      */
     PartitionStrategy partitionStrategy = createPartitionStrategy();
-    // creat a descriptor with the parquet output format and the correct partition strategy
+    // create a descriptor with the parquet output format and the correct partition strategy
     try {
       descriptor = new DatasetDescriptor.Builder().schemaUri("resource:" + schema)
           .format(Formats.PARQUET).partitionStrategy(partitionStrategy).build();
@@ -164,8 +160,8 @@ public abstract class AbstractParquetPacketWriter {
 
   /**
    * Create a new builder for every row.
-   * 
-   * @return
+   *
+   * @return a new builder
    */
   protected GenericRecordBuilder newBuilder() {
     return new GenericRecordBuilder(descriptor.getSchema());
@@ -184,14 +180,19 @@ public abstract class AbstractParquetPacketWriter {
         + " Parquet writer status --------------------");
     LOGGER.info(packetCounter + " packets written to parquet file.");
     LOGGER.info("-----------------------------------------------------");
+    LOGGER.info("countries: {}", countries.size());
+    LOGGER.info("asn_cache: {}", asn_cache.size());
+    LOGGER.info("geo_ip_cache: {}", geo_ip_cache.size());
+    LOGGER.info("geo_ip_cache: {}", geo_ip_cache.size());
+    LOGGER.info("asn_cache: {}", asn_cache.size());
   }
 
 
   /**
    * replace all non printable ascii chars with the hex value of the char.
-   * 
-   * @param str
-   * @return
+   *
+   * @param str the input
+   * @return the input string with all non printable ascii chars replaced with the hex value of the char.
    */
   public String filter(String str) {
     StringBuilder filtered = new StringBuilder(str.length());
@@ -200,7 +201,7 @@ public abstract class AbstractParquetPacketWriter {
       if (current >= 0x20 && current <= 0x7e) {
         filtered.append(current);
       } else {
-        filtered.append("0x" + Integer.toHexString(current));
+        filtered.append("0x").append(Integer.toHexString(current));
       }
     }
 
@@ -211,8 +212,9 @@ public abstract class AbstractParquetPacketWriter {
 
   protected void updateMetricMap(Map<Integer, Integer> map, Integer key) {
     Integer currentVal = map.get(key);
+    //noinspection Java8MapApi
     if (currentVal != null) {
-      map.put(key, currentVal.intValue() + 1);
+      map.put(key, currentVal + 1);
     } else {
       map.put(key, 1);
     }

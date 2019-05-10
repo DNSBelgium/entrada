@@ -34,6 +34,7 @@ import nl.sidn.pcap.ip.GoogleResolverCheck;
 import nl.sidn.pcap.ip.OpenDNSResolverCheck;
 import nl.sidn.pcap.packet.Packet;
 import nl.sidn.pcap.support.PacketCombination;
+import nl.sidn.pcap.util.GeoLookupUtil;
 import nl.sidn.pcap.util.Settings;
 import nl.sidn.stats.MetricManager;
 import org.apache.avro.generic.GenericRecord;
@@ -73,8 +74,8 @@ public class DNSParquetPacketWriter extends AbstractParquetPacketWriter {
   private GoogleResolverCheck googleCheck = new GoogleResolverCheck();
   private OpenDNSResolverCheck openDNSCheck = new OpenDNSResolverCheck();
 
-  public DNSParquetPacketWriter(String repoName, String schema) {
-    super(repoName, schema);
+  public DNSParquetPacketWriter(String repoName, String schema, GeoLookupUtil geoLookup) {
+    super(repoName, schema, geoLookup);
     metricManager = MetricManager.getInstance();
   }
 
@@ -109,7 +110,7 @@ public class DNSParquetPacketWriter extends AbstractParquetPacketWriter {
   /**
    * create 1 parquet record which combines values from the query and the response
    *
-   * @param packet
+   * @param combo the combo to write to parquet
    */
   @Override
   public void write(PacketCombination combo) {
@@ -393,8 +394,8 @@ public class DNSParquetPacketWriter extends AbstractParquetPacketWriter {
   /**
    * Write EDNS0 option (if any are present) to file.
    *
-   * @param message
-   * @param builder
+   * @param message the DNS message to analyze
+   * @param builder used for adding fields
    */
   private void writeRequestOptions(Message message, GenericRecordBuilder builder) {
     if (message == null) {

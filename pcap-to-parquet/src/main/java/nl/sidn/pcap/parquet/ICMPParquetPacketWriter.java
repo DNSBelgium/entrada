@@ -19,13 +19,6 @@
  */
 package nl.sidn.pcap.parquet;
 
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.generic.GenericRecordBuilder;
-import org.apache.commons.lang3.StringUtils;
-import org.kitesdk.data.PartitionStrategy;
 import nl.sidn.dnslib.message.Header;
 import nl.sidn.dnslib.message.Message;
 import nl.sidn.dnslib.message.Question;
@@ -36,8 +29,17 @@ import nl.sidn.pcap.packet.DNSPacket;
 import nl.sidn.pcap.packet.ICMPPacket;
 import nl.sidn.pcap.packet.Packet;
 import nl.sidn.pcap.support.PacketCombination;
+import nl.sidn.pcap.util.GeoLookupUtil;
 import nl.sidn.pcap.util.Settings;
 import nl.sidn.stats.MetricManager;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.GenericRecordBuilder;
+import org.apache.commons.lang3.StringUtils;
+import org.kitesdk.data.PartitionStrategy;
+
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ICMPParquetPacketWriter extends AbstractParquetPacketWriter {
 
@@ -49,8 +51,8 @@ public class ICMPParquetPacketWriter extends AbstractParquetPacketWriter {
   private Map<Integer, Integer> types_v4 = new HashMap<>();
   private Map<Integer, Integer> types_v6 = new HashMap<>();
 
-  public ICMPParquetPacketWriter(String repoName, String schema) {
-    super(repoName, schema);
+  public ICMPParquetPacketWriter(String repoName, String schema, GeoLookupUtil geoLookup) {
+    super(repoName, schema, geoLookup);
   }
 
   @Override
