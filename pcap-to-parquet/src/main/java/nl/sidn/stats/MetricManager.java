@@ -21,18 +21,12 @@
  */	
 package nl.sidn.stats;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
+import nl.sidn.pcap.util.Settings;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import nl.sidn.pcap.util.Settings;
+import java.util.*;
 
 
 public class MetricManager {
@@ -148,7 +142,6 @@ public class MetricManager {
 	 * @param metric
 	 * @param value
 	 * @param timestamp
-	 * @param server
 	 */
 	public void sendAggregated(String metric, int value, long timestamp){
 		sendAggregated(metric, value, timestamp, true);

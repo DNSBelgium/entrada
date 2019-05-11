@@ -83,9 +83,9 @@ public class DNSParquetPacketWriter extends AbstractParquetPacketWriter {
    * Get the question, from the request packet if not available then from the response, which should
    * be the same.
    *
-   * @param reqMessage
-   * @param respMessage
-   * @return
+   * @param reqMessage the request
+   * @param respMessage the response
+   * @return the Question from request or response packet
    */
   private Question lookupQuestion(Message reqMessage, Message respMessage) {
     if (reqMessage != null && reqMessage.getQuestions().size() > 0) {

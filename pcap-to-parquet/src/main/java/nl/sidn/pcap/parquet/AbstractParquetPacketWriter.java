@@ -35,7 +35,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class AbstractParquetPacketWriter {
+public abstract class AbstractParquetPacketWriter implements ParquetWriter {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractParquetPacketWriter.class);
 
